@@ -1,0 +1,19 @@
+# Fdb version 4
+["pdflatex"] 1774289081.79516 "/home/noizy/Documents/Tesis/tesis_main.tex" "tesis_main.pdf" "tesis_main" 1774289081.8732 0
+  "/etc/texmf/web2c/texmf.cnf" 1774283127.71196 475 c0e671620eb5563b2130f56340a5fde8 ""
+  "/home/noizy/Documents/Tesis/tesis_main.tex" 1774289081.61174 62 55d7091e3c38cf7c170b8e8af1b1bc4b ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1248133631 35752 024fb6c41858982481f6968b5fc26508 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls" 1738182759 20144 63d8bacaf52e5abf4db3bc322373e1d4 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo" 1738182759 8448 5cf247d4bd0c7d5d711bbbdf111fae2e ""
+  "/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def" 1716410060 29785 9f93ab201fe5dd053afcc6c1bcf7d266 ""
+  "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1741904018 41538 c016915c1d51223b6dbbfe27341748a8 ""
+  "/usr/share/texmf/web2c/texmf.cnf" 1741904018 41538 c016915c1d51223b6dbbfe27341748a8 ""
+  "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1774288999 165211 6b08d096f3d0fe5ff6b266061a2b45e0 ""
+  "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1774289014 1958615 dafff2bc965cf23acaedb67237dd2d0c ""
+  "tesis_main.aux" 1774289081.85442 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "tesis_main.tex" 1774289081.61174 62 55d7091e3c38cf7c170b8e8af1b1bc4b ""
+  (generated)
+  "tesis_main.aux"
+  "tesis_main.log"
+  "tesis_main.pdf"
+  (rewritten before read)

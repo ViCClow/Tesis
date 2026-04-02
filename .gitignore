@@ -1,0 +1,22 @@
+# LaTeX generated files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+
+# Python and C++ compile files
+__pycache__/
+*.pyc
+*.o
+*.out
+
+# Large sensor data logs (optional, but recommended so you don't overload GitHub)
+*.csv
+*.dat

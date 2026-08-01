@@ -1,6 +1,8 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define MQ136_PIN A0

@@ -6,9 +6,9 @@
 #include "network.h"         // Nuestro propio módulo de red (que crearemos después)
 
 // ── Credenciales y Destino ─────────────────────────────────────────────
-#define WIFI_SSID      "TU_NOMBRE_DE_RED"
-#define WIFI_PASS      "TU_CONTRASENA"
-#define TARGET_IP      "192.168.X.X"  // IP de tu computador con Parrot OS
+#define WIFI_SSID      "Wifi_LF201"
+#define WIFI_PASS      "wifi_lf201_deco"
+#define TARGET_IP      "192.168.68.59"  // IP de tu computador con Parrot OS
 #define TARGET_PORT    1234
 
 extern "C" void app_main(void) {

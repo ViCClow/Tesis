@@ -4,6 +4,7 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"       // Requisito estricto de ESP-IDF para el Wi-Fi
 #include "network.h"         // Nuestro propio módulo de red (que crearemos después)
+#include "sensor.h"
 
 // ── Credenciales y Destino ─────────────────────────────────────────────
 #define WIFI_SSID      "Wifi_LF201"
@@ -11,10 +12,10 @@
 #define TARGET_IP      "192.168.68.59"  // IP de tu computador con Parrot OS
 #define TARGET_PORT    1234
 
-extern "C" void app_main(void) {
+static const char *TAG = "MAIN";
+
+extern "C" void app_main() {
     // 1. Inicializar la memoria Flash no volátil (NVS)
-    // En ESP-IDF, el driver de Wi-Fi se niega a iniciar si no tiene acceso 
-    // a esta memoria para guardar datos de calibración.
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       ESP_ERROR_CHECK(nvs_flash_erase());
@@ -22,39 +23,46 @@ extern "C" void app_main(void) {
     }
     ESP_ERROR_CHECK(ret);
 
-    printf("Inicializando sistema XIAO ESP32S3...\n");
+    ESP_LOGI(TAG, "Inicializando sistema XIAO ESP32S3...");
 
-    // 2. Conectar a Wi-Fi (Llamamos a la función que haremos en network.cpp)
-    wifi_init_sta(WIFI_SSID, WIFI_PASS);
+    // 2. Conectar a Wi-Fi usando la función de tu network.cpp
+    wifi_init_sta(WIFI_SSID, WIFI_PASS); 
+    
+    // Esperamos un momento para asegurar que obtenga IP antes de enviar datos
+    vTaskDelay(pdMS_TO_TICKS(3000)); 
 
-    // 3. Imprimir cabecera CSV (Equivalente a tu Serial.println del setup)
-    printf("Tiempo_ms,Temp_C,Hum_%%,Presion_hPa,Rs_Ohmios\n");
+    // Nota: Si tu network.cpp no tiene una función udp_init(), 
+    // simplemente la omitimos, ya que los sockets se pueden abrir al enviar.
 
-    // 4. Ciclo Principal (Equivalente a tu loop() en Arduino)
+    // 3. Inicializar Sensores
+    sensors_init();
+
+    // 4. Imprimir cabecera CSV
+    printf("Tiempo_ms,Temp_C,Hum_%%,Presion_hPa,MQ136_Raw\n");
+
+    char payload[128];
+
+    // 5. Ciclo Principal
     while (true) {
         
-        // Obtener tiempo en milisegundos (Equivalente a millis())
+        // Obtener tiempo en milisegundos
         uint32_t tiempo = xTaskGetTickCount() * portTICK_PERIOD_MS;
         
-        // --- Variables Simuladas (Hasta que configuremos el BME280 y el ADC) ---
-        float temp = 25.0;
-        float hum = 50.0;
-        float pres = 1013.25;
-        float rs = 1500.0;
+        // Leer datos de los sensores
+        int mq136_val = read_mq136_raw();
+        BME280_Data bme_val = read_bme280();
 
-        // Construir el Payload CSV en un arreglo de caracteres.
-        // En ESP-IDF no existe la clase "String", usamos snprintf de C estándar.
-        char payload[128];
-        snprintf(payload, sizeof(payload), "%lu,%.2f,%.2f,%.2f,%.2f\n", tiempo, temp, hum, pres, rs);
+        // Construir el Payload CSV
+        snprintf(payload, sizeof(payload), "%lu,%.2f,%.2f,%.2f,%d\n", 
+                 tiempo, bme_val.temperature, bme_val.humidity, bme_val.pressure, mq136_val);
 
-        // Imprimir localmente (Equivalente a Serial.print)
+        // Imprimir localmente
         printf("%s", payload);
 
-        // Enviar por red (Llamamos a la función que haremos en network.cpp)
+        // Enviar por red pasando TODOS los argumentos que pide tu función
         udp_send_data(TARGET_IP, TARGET_PORT, payload);
 
-        // Retardo estricto del sistema operativo (Equivalente a delay(1000))
-        // Liberamos el procesador para que el ESP32 no colapse.
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // Retardo estricto del sistema (100 ms = 10Hz)
+        vTaskDelay(pdMS_TO_TICKS(100)); 
     }
 }

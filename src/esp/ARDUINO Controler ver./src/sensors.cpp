@@ -37,8 +37,3 @@ float read_bme_humidity() {
     // Retorna humedad relativa en %
     return bme.readHumidity();
 }
-
-float read_bme_pressure() {
-    // readPressure() devuelve Pascales. Lo dividimos por 100 para entregar hPa (hectopascales)
-    return bme.readPressure() / 100.0F;
-}

@@ -10,6 +10,5 @@ bool sensors_init();
 int read_mq136();
 float read_bme_temperature();
 float read_bme_humidity();
-float read_bme_pressure();
 
 #endif // SENSORS_H

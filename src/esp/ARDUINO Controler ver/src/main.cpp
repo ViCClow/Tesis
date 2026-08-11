@@ -49,7 +49,7 @@ void loop() {
         
         // snprintf ensambla las variables en texto plano de forma segura
         // %d (entero), %.2f (flotante con 2 decimales)
-        snprintf(payload, sizeof(payload), "%3f,%.2f,%.2f", mq136_adc, temp, hum);
+        snprintf(payload, sizeof(payload), "%.3f,%.2f,%.2f", mq136_adc, temp, hum);
 
         // --- Transmisión ---
         mqtt_publish(MQTT_TOPIC, payload);

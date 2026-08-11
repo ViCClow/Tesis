@@ -1,0 +1,5 @@
+-mlongcalls
+-fno-builtin-memcpy
+-fno-builtin-memset
+-fno-builtin-bzero
+"-specs=/home/noizy/Documents/Tesis/src/esp/Xiao_MQ136_UKF/.pio/build/seeed_xiao_esp32s3/specs/picolibc.specs"

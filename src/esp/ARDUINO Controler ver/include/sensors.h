@@ -3,11 +3,13 @@
 
 #include <Arduino.h>
 
-// Inicializa el BME280 y configura el ADC
+// Inicializa el BME280 y configura la resolución del ADC
 bool sensors_init();
 
-// Funciones de lectura pura
-int read_mq136();
+// Devuelve el voltaje real emitido por el sensor MQ-136
+float read_mq136_voltage();
+
+// Funciones de lectura climática
 float read_bme_temperature();
 float read_bme_humidity();
 

@@ -1,19 +1,23 @@
 #include "sensors.h"
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h> // Se cargarán desde tu carpeta 'lib'
+#include <Adafruit_BME280.h>
 
-// 1. Definir hardware
-const int MQ136_PIN = A0; // El pin analógico donde está conectado el MQ-136
-Adafruit_BME280 bme;      // Instancia del sensor climático por I2C
+// --- DEFINICIÓN DE HARDWARE ---
+const int MQ136_PIN = A0; 
+Adafruit_BME280 bme;      
+
+// --- CALIBRACIÓN DEL DIVISOR DE VOLTAJE ---
+// R1 = 6.9k (4.7k + 2.2k) y R2 = 10k
+const float VOLTAGE_DIVIDER_RATIO = 1.69; 
+const float V_REF = 3.3; // Voltaje de referencia de la placa
 
 bool sensors_init() {
     Serial.println("Inicializando sensores...");
     
-    // Fijar explícitamente la resolución del ADC a 12 bits (0 a 4095)
-    // Esto asegura que la matemática de tu regresión polinomial futura no se rompa
+    // Fijar resolución del ADC a 12 bits (0 a 4095)
     analogReadResolution(12);
     
-    // Iniciar BME280 (La dirección estándar de los módulos suele ser 0x76, a veces 0x77)
+    // Iniciar BME280 (Dirección I2C: 0x76)
     if (!bme.begin(0x76)) {
         Serial.println("Error: No se detecta el sensor BME280. Revisa el cableado I2C.");
         return false;
@@ -23,17 +27,22 @@ bool sensors_init() {
     return true;
 }
 
-int read_mq136() {
-    // Retorna el valor ADC crudo (0 - 4095)
-    return analogRead(MQ136_PIN);
+float read_mq136_voltage() {
+    int adc_raw = analogRead(MQ136_PIN);
+    
+    // 1. Mapear el ADC (0-4095) al voltaje que realmente está leyendo el pin (0-3.3V)
+    float v_pin = (adc_raw / 4095.0) * V_REF;
+    
+    // 2. Mapear de vuelta al voltaje original del sensor antes del divisor
+    float v_sensor = v_pin * VOLTAGE_DIVIDER_RATIO;
+    
+    return v_sensor;
 }
 
 float read_bme_temperature() {
-    // Retorna temperatura en grados Celsius
     return bme.readTemperature();
 }
 
 float read_bme_humidity() {
-    // Retorna humedad relativa en %
     return bme.readHumidity();
 }

@@ -3,8 +3,8 @@
 #include "sensors.h"
 
 // --- CONFIGURACIÓN DE RED ---
-const char* WIFI_SSID     = "NOMBRE_WIFI";
-const char* WIFI_PASS     = "CLAVE_WIFI";
+const char* WIFI_SSID     = "dpto1708";
+const char* WIFI_PASS     = "victor2501";
 const char* MQTT_SERVER   = "192.168.1.7"; // IP del dispositivo funcionando como servidor
 const int   MQTT_PORT     = 1883;
 const char* MQTT_TOPIC    = "tesis/sensores/ukf";

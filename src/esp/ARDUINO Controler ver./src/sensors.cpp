@@ -1,22 +1,44 @@
-#include <Arduino.h>
-
 #include "sensors.h"
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
+#include <Adafruit_BME280.h> // Se cargarán desde tu carpeta 'lib'
 
-// 1. Crea el objeto del BME280 aquí
-// Adafruit_BME280 bme; 
+// 1. Definir hardware
+const int MQ136_PIN = A0; // El pin analógico donde está conectado el MQ-136
+Adafruit_BME280 bme;      // Instancia del sensor climático por I2C
 
-// 2. Define el pin de tu MQ-136 (El XIAO ESP32S3 usa el pin A0)
-const int MQ136_PIN = A0; 
-
-void sensors_init() {
-    // 3. Inicia el BME280 (Tip: bme.begin(0x76))
-    // 4. (Opcional) Configura la resolución del ADC si quieres asegurar los 12 bits
+bool sensors_init() {
+    Serial.println("Inicializando sensores...");
+    
+    // Fijar explícitamente la resolución del ADC a 12 bits (0 a 4095)
+    // Esto asegura que la matemática de tu regresión polinomial futura no se rompa
+    analogReadResolution(12);
+    
+    // Iniciar BME280 (La dirección estándar de los módulos suele ser 0x76, a veces 0x77)
+    if (!bme.begin(0x76)) {
+        Serial.println("Error: No se detecta el sensor BME280. Revisa el cableado I2C.");
+        return false;
+    }
+    
+    Serial.println("Sensores listos.");
+    return true;
 }
 
 int read_mq136() {
-    // 5. Lee y retorna el valor analógico
+    // Retorna el valor ADC crudo (0 - 4095)
+    return analogRead(MQ136_PIN);
 }
 
-// ... función para leer el clima ...
+float read_bme_temperature() {
+    // Retorna temperatura en grados Celsius
+    return bme.readTemperature();
+}
+
+float read_bme_humidity() {
+    // Retorna humedad relativa en %
+    return bme.readHumidity();
+}
+
+float read_bme_pressure() {
+    // readPressure() devuelve Pascales. Lo dividimos por 100 para entregar hPa (hectopascales)
+    return bme.readPressure() / 100.0F;
+}

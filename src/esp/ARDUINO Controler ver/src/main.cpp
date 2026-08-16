@@ -3,9 +3,9 @@
 #include "sensors.h"
 
 // --- CONFIGURACIÓN DE RED ---
-const char* WIFI_SSID     = "NOMBRE_WIFI";
-const char* WIFI_PASS     = "CLAVE_WIFI";
-const char* MQTT_SERVER   = "192.168.1.7"; // La IP de tu Parrot OS
+const char* WIFI_SSID     = "dpto1708";
+const char* WIFI_PASS     = "victor2501";
+const char* MQTT_SERVER   = "192.168.1.7"; // IP del dispositivo funcionando como servidor
 const int   MQTT_PORT     = 1883;
 const char* MQTT_TOPIC    = "tesis/sensores/ukf";
 
@@ -21,7 +21,7 @@ void setup() {
 
     // 1. Iniciar subsistema de sensores
     if (!sensors_init()) {
-        Serial.println("ADVERTENCIA: Falló el BME280. El sistema seguirá operando a ciegas.");
+        Serial.println("ADVERTENCIA: Falló el BME280. El sistema seguirá operando.");
     }
 
     // 2. Iniciar subsistema de red (Se quedará bloqueado aquí hasta conectar al Wi-Fi)
@@ -39,7 +39,7 @@ void loop() {
         tiempoAnterior = tiempoActual;
 
         // --- Adquisición de Datos ---
-        int   mq136_adc = read_mq136();
+        int   mq136_adc = read_mq136_voltage();
         float temp      = read_bme_temperature();
         float hum       = read_bme_humidity();
 
@@ -49,7 +49,7 @@ void loop() {
         
         // snprintf ensambla las variables en texto plano de forma segura
         // %d (entero), %.2f (flotante con 2 decimales)
-        snprintf(payload, sizeof(payload), "%d,%.2f,%.2f", mq136_adc, temp, hum);
+        snprintf(payload, sizeof(payload), "%.3f,%.2f,%.2f", mq136_adc, temp, hum);
 
         // --- Transmisión ---
         mqtt_publish(MQTT_TOPIC, payload);

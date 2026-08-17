@@ -1,6 +1,6 @@
 #include "network.h"
 #include <WiFi.h>
-#include <MQTT.h> // Se cargará desde tu carpeta 'lib' local
+#include <MQTT.h>
 
 // Instancias globales
 WiFiClient espClient;

@@ -3,17 +3,39 @@
 #include <SPI.h>  // Para la pantalla
 #include <Wire.h> // Para el I2C del sensor DFRobot
 #include <DFRobot_MultiGasSensor.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
 
 // ==========================================
 // 1. VARIABLES GLOBALES
 // ==========================================
 TFT_eSPI tft = TFT_eSPI(); 
 
+// Configuración de Red 
+const char* WIFI_SSID     = /*"dpto1708";*/ "Wifi_LF201";
+const char* WIFI_PASS     = /*"victor2501";*/ "wifi_lf201_deco";
+const char* MQTT_SERVER   = "192.168.68.65"; // IP del dispositivo funcionando como servidor
+const int   MQTT_PORT     = 1883;
+const char* MQTT_TOPIC    = "tesis/sensores/reference";
+
+// --- Instancias ---
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// --- Funciones de Conexión ---
+void setup_wifi() {
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+    }
+}
+
 // Instanciamos el objeto del sensor en el bus I2C
 // La dirección I2C por defecto de estos sensores suele ser 0x74
 DFRobot_GAS_I2C gas(&Wire, 0x74); 
 
 unsigned long tiempoAnterior = 0;
+unsigned long ultimoIntentoMQTT = 0;
 const long intervalo_ms = 1000;
 
 // Variables de interfaz gráfica
@@ -24,6 +46,8 @@ const uint16_t btn_h = 50;
 bool modo_alerta = false;
 
 bool sensor_conectado = false;
+
+
 
 // ==========================================
 // 2. HARDWARE: SENSOR DFROBOT H2S (I2C)
@@ -135,28 +159,82 @@ void procesar_tactil() {
 // ==========================================
 
 void setup() {
+    // 1. Inicializar depuración y pantalla primero
     Serial.begin(115200);
     delay(1000); 
 
     init_display();
     
-    // Al colocar esto al final, si el sensor falla (cables desconectados), 
-    // la pantalla igual se dibujará y podrás ver los mensajes en el monitor serial.
+    // (Opcional) Puedes mostrar un mensaje en la TFT aquí
+    // tft.fillScreen(TFT_BLACK);
+    // tft.drawString("Iniciando Sistema...", 10, 10, 2);
+
+    // 2. Inicializar Comunicaciones (WiFi y MQTT)
+    // tft.drawString("Conectando WiFi...", 10, 30, 2);
+    setup_wifi(); 
+    client.setServer(MQTT_SERVER, MQTT_PORT);
+    
+    // 3. Inicializar Hardware Externo al final
+    // Al colocar esto al final, si el sensor falla, 
+    // la pantalla igual se dibujará y podrás ver los mensajes.
+    // tft.drawString("Iniciando Sensor DFRobot...", 10, 50, 2);
     init_sensor_h2s(); 
+    
+    // tft.fillScreen(TFT_BLACK); // Limpiar pantalla antes de entrar al loop()
 }
 
 void loop() {
+    unsigned long tiempoActual = millis();
+
+    // 1. Gestión de MQTT No Bloqueante
+    if (!client.connected()) {
+        // Intentar reconectar solo cada 5 segundos para no congelar la pantalla
+        if (tiempoActual - ultimoIntentoMQTT > 5000) {
+            ultimoIntentoMQTT = tiempoActual;
+            Serial.println("Intentando conexión MQTT...");
+            
+            // IMPORTANTE: Usa un ID único para este ESP32
+            if (client.connect("ESP32_Referencia_DFRobot")) {
+                Serial.println("Conectado al servidor MQTT");
+            }
+        }
+    } else {
+        // Si está conectado, mantener vivo el proceso MQTT
+        client.loop();
+    }
+
+    // 2. Procesar panel táctil (se ejecuta en cada ciclo para máxima respuesta)
     procesar_tactil();
 
-    unsigned long tiempoActual = millis();
+    // 3. Temporizador de lectura y publicación (1000 ms)
     if (tiempoActual - tiempoAnterior >= intervalo_ms) {
         tiempoAnterior = tiempoActual;
 
-        float lectura_h2s = read_sensor_h2s();
+        // Leer sensor
+        float lectura_h2s = 0.0;
+        if (sensor_conectado) {
+            lectura_h2s = read_sensor_h2s();
+        }
+        
+        // Actualizar pantalla
         update_display_data(lectura_h2s);
         
-        Serial.print("Concentracion H2S: ");
+        // Imprimir en monitor Serial
+        Serial.print("Concentracion H2S (Ref): ");
         Serial.print(lectura_h2s);
         Serial.println(" PPM");
+
+        // Publicar por MQTT solo si estamos conectados
+        if (client.connected()) {
+            // 1. Determinar el estado del botón en texto
+            String estado_boton = modo_alerta ? "ON" : "OFF";
+            
+            // 2. Construir el payload en formato JSON
+            // Resultado esperado: {"ppm": 12.34, "alerta": "ON"}
+            String payload = "{\"ppm\":" + String(lectura_h2s, 2) + ", \"alerta\":\"" + estado_boton + "\"}";
+            
+            // 3. Enviar al broker
+            client.publish(MQTT_TOPIC, payload.c_str());
+        }
     }
 }

@@ -43,6 +43,7 @@ void loop() {
         float   mq136_adc = read_mq136_voltage();
         float temp      = read_bme_temperature();
         float hum       = read_bme_humidity();
+        float ref_ppm   = read_sensor_dfrobot();
 
         //  --- Proceso UKF ---
         float ukf_proc = ukf_step(mq136_adc, temp, hum);
@@ -54,8 +55,8 @@ void loop() {
         // snprintf ensambla las variables en texto plano de forma segura
         // %d (entero), %.2f (flotante con 2 decimales)
         snprintf(payload, sizeof(payload), 
-                    "{\"UKF\":%.2f, \"raw\":%.2f, \"temp\":%.2f, \"hum\":%.2f}", 
-                    ukf_proc, mq136_adc, temp, hum);
+                 "{\"UKF\":%.2f, \"raw\":%.2f, \"temp\":%.2f, \"hum\":%.2f, \"ref\":%.2f}", 
+                 ukf_proc, mq136_adc, temp, hum, ref_ppm);
 
         // --- Transmisión ---
         mqtt_publish(MQTT_TOPIC, payload);

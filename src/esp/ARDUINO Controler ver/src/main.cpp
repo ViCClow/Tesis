@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "network.h"
 #include "sensors.h"
+#include "ukf.h"
 
 // --- CONFIGURACIÓN DE RED --- 
 const char* WIFI_SSID     = /*"dpto1708";*/ "Wifi_LF201";
@@ -21,7 +22,7 @@ void setup() {
 
     // 1. Iniciar subsistema de sensores
     if (!sensors_init()) {
-        Serial.println("ADVERTENCIA: Falló el BME280. El sistema seguirá operando.");
+        Serial.println("ADVERTENCIA: Falló algún sensor. El sistema seguirá operando.");
     }
 
     // 2. Iniciar subsistema de red (Se quedará bloqueado aquí hasta conectar al Wi-Fi)
@@ -39,17 +40,22 @@ void loop() {
         tiempoAnterior = tiempoActual;
 
         // --- Adquisición de Datos ---
-        int   mq136_adc = read_mq136_voltage();
+        float   mq136_adc = read_mq136_voltage();
         float temp      = read_bme_temperature();
         float hum       = read_bme_humidity();
 
+        //  --- Proceso UKF ---
+        float ukf_proc = ukf_step(mq136_adc, temp, hum);
+
         // --- Empaquetado de Datos (Formato CSV) ---
         // Buffer para guardar el mensaje (Ej: "4095,25.40,60.50")
-        char payload[64]; 
+        char payload[128]; 
         
         // snprintf ensambla las variables en texto plano de forma segura
         // %d (entero), %.2f (flotante con 2 decimales)
-        snprintf(payload, sizeof(payload), "%.2f,%.2f,%.2f", mq136_adc, temp, hum);
+        snprintf(payload, sizeof(payload), 
+                    "{\"UKF\":%.2f, \"raw\":%.2f, \"temp\":%.2f, \"hum\":%.2f}", 
+                    ukf_proc, mq136_adc, temp, hum);
 
         // --- Transmisión ---
         mqtt_publish(MQTT_TOPIC, payload);

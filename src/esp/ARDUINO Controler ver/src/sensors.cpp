@@ -1,10 +1,13 @@
 #include "sensors.h"
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <DFRobot_MultiGasSensor.h> 
 
 // --- DEFINICIÓN DE HARDWARE ---
 const int MQ136_PIN = A0; 
 Adafruit_BME280 bme;      
+DFRobot_GAS_I2C gas(&Wire, 0x74);  
+bool dfrobot_conectado = false;
 
 // --- CALIBRACIÓN DEL DIVISOR DE VOLTAJE ---
 // R1 = 6.9k (4.7k + 2.2k) y R2 = 10k
@@ -21,6 +24,19 @@ bool sensors_init() {
     if (!bme.begin(0x76)) {
         Serial.println("Error: No se detecta el sensor BME280. Revisa el cableado I2C.");
         return false;
+    }
+
+    Serial.println("Inicializando Sensor DFRobot H2S...");
+    if(!gas.begin()) {
+        Serial.println("¡Error! No se encontró el sensor DFRobot.");
+        dfrobot_conectado = false;
+    } else {
+        Serial.println("Sensor DFRobot H2S inicializado con éxito.");
+        // Activa la compensación de temperatura interna del módulo
+        gas.changeAcquireMode(gas.PASSIVITY); 
+        delay(1000);
+        gas.changeAcquireMode(gas.INITIATIVE);
+        dfrobot_conectado = true;
     }
     
     Serial.println("Sensores listos.");
@@ -45,4 +61,11 @@ float read_bme_temperature() {
 
 float read_bme_humidity() {
     return bme.readHumidity();
+}
+
+float read_dfrobot_h2s() {
+    if (dfrobot_conectado) {
+        return gas.readGasConcentrationPPM();
+    }
+    return 0.0; // Si el sensor falló al inicio, retorna 0 para no colapsar la matemática
 }

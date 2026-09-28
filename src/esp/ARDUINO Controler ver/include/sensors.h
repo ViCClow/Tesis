@@ -13,4 +13,7 @@ float read_mq136_voltage();
 float read_bme_temperature();
 float read_bme_humidity();
 
+// --- Sensor de Referencia DFRobot H2S (I2C) ---
+float read_sensor_dfrobot();
+
 #endif // SENSORS_H
